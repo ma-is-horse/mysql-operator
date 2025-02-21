@@ -43,7 +43,7 @@ on:
         default: 'v0.0.1'
         type: string
 env:
-  ONLINE_REGISTER: ghcr.io/ksmartdata
+  ONLINE_REGISTER: ghcr.io/ma-is-horse
   BUILD_PLATFORM: linux/amd64,linux/arm64
 
 jobs:
