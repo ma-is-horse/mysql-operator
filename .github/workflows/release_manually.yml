@@ -593,7 +593,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # rocketmq-dashboard 打包失败, 使用上面的rocketmq-console-schnell18
   rocketmq-dashboard:
     if: ${{ inputs.job == 'rocketmq-dashboard' }}
     runs-on: ubuntu-latest
@@ -605,19 +604,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Clone RocketMQ Docker
+      - name: Clone RocketMQ Dashboard
         uses: actions/checkout@v2
         with:
-          repository: apache/rocketmq-docker
-          ref: master
-
-      - name: Customize RocketMQ Dashboard
-        run: |
-          # replace FROM centos:7 with FROM --platform=$TARGETPLATFORM centos:7 by sed
-          sed -i 's/FROM centos:7/FROM --platform=$TARGETPLATFORM centos:7/g' image-build/Dockerfile-centos-dashboard
-          sed -i 's/openssl, which gnupg, wget/openssl which gnupg wget/' image-build/Dockerfile-centos-dashboard
-          # replace 3.6.3 to 3.9.4
-          sed -i 's/3.6.3/3.9.4/g' image-build/Dockerfile-centos-dashboard
+          repository: ksmartdata/rocketmq-dashboard
+          ref: package
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -625,19 +616,27 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2.0.0
 
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: 8
+          distribution: 'temurin'
+
+      - name: Build Tar
+        run: |
+          MAVEN_OPTS="-Xmx512m" mvn package -Dmaven.compiler.fork=true -DskipTests
+
       - name: Build && Push
         uses: docker/build-push-action@v3.1.1
         with:
           annotations: |
             GITHUB_REF: ${{ github.ref }}
             GITHUB_SHA: ${{ github.sha }}
-          context: ./image-build
-          file: ./image-build/Dockerfile-centos-dashboard
+          context: .
+          file: ./src/main/docker/Dockerfile
           github-token: ${{ secrets.GITHUB_TOKEN }}
           push: true
           platforms: ${{ env.BUILD_PLATFORM }}
-          build-args: |
-            version=5.1.4
           tags: |
             ${{ env.ONLINE_REGISTER }}/${{ inputs.job }}:${{ inputs.tag }}
           cache-from: type=gha
