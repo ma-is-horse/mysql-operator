@@ -15,9 +15,10 @@ on:
           - 'rocketmq-dashboard'
           - 'rocketmq-console-schnell18'
           - 'rocketmq-controller'
-          - 'community-server'
-          - 'community-router'
-          - 'community-operator'
+          - 'mgr-community-server'
+          - 'mgr-community-router'
+          - 'mgr-community-operator'
+          - 'mgr-community-sidecar'
           - 'pgbouncer'
           - 'rclone-mongo'
           - 'ot-redis-operator'
@@ -642,8 +643,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  community-server:
-    if: ${{ inputs.job == 'community-server' }}
+  mgr-community-server:
+    if: ${{ inputs.job == 'mgr-community-server' }}
     runs-on: ubuntu-latest
     steps:
       - name: Login to GitHub Container Registry
@@ -670,8 +671,8 @@ jobs:
           images: ${{ env.ONLINE_REGISTER }}/community-server:${{ inputs.tag }}-amd64,${{ env.ONLINE_REGISTER }}/community-server:${{ inputs.tag }}-arm64
           push: true
 
-  community-router:
-    if: ${{ inputs.job == 'community-router' }}
+  mgr-community-router:
+    if: ${{ inputs.job == 'mgr-community-router' }}
     runs-on: ubuntu-latest
     steps:
       - name: Login to GitHub Container Registry
@@ -698,8 +699,8 @@ jobs:
           images: ${{ env.ONLINE_REGISTER }}/community-router:${{ inputs.tag }}-amd64,${{ env.ONLINE_REGISTER }}/community-router:${{ inputs.tag }}-arm64
           push: true
 
-  community-operator:
-    if: ${{ inputs.job == 'community-operator' }}
+  mgr-community-operator:
+    if: ${{ inputs.job == 'mgr-community-operator' }}
     runs-on: ubuntu-latest
     steps:
       - name: Login to GitHub Container Registry
@@ -726,6 +727,41 @@ jobs:
           images: ${{ env.ONLINE_REGISTER }}/community-operator:${{ inputs.tag }}-amd64,${{ env.ONLINE_REGISTER }}/community-operator:${{ inputs.tag }}-arm64
           push: true
           amend: true
+  mgr-community-sidecar:
+    if: ${{ inputs.job == 'mgr-community-sidecar' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git clone mysql-operator repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2.0.0
+      - name: Build && Push
+        uses: docker/build-push-action@v3.1.1
+        with:
+          annotations: |
+            GITHUB_REF: ${{ github.ref }}
+            GITHUB_SHA: ${{ github.sha }}
+          context: ./images/mgr-diagnose
+          file: ./images/mgr-diagnose/Dockerfile
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          push: true
+          platforms: ${{ env.BUILD_PLATFORM }}
+          tags: |
+            ${{ env.ONLINE_REGISTER }}/community-operator-with-diagnose:8.3.0-2.1.2
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   pgbouncer:
     if: ${{ inputs.job == 'pgbouncer' }}
