@@ -5,10 +5,9 @@ on:
       job:
         description: 'which docker build to run'
         required: true
-        default: 'rocketmq-exporter'
+        default: 'rocketmq-operator'
         type: choice
         options:
-          - 'rocketmq-exporter'
           - 'rocketmq-operator'
           - 'rocketmq-nameserver'
           - 'rocketmq-broker'
@@ -26,13 +25,11 @@ on:
           - 'ot-redis'
           - 'ot-redis-upstream'
           - 'zoo-entrance'
-          - 'logical-backup'
           - 'ci-builder'
           - 'elasticsearch-with-s3-plugin'
           - 'mysql-operator-sidecar-80'
           - 'redisinsight'
           - 'mysql-operator'
-          - 'mysqld-exporter'
       upstream-ref:
         description: 'upstream ref'
         required: false
@@ -148,37 +145,6 @@ jobs:
           tags: |
             ${{ env.ONLINE_REGISTER }}/ci-builder:${{ inputs.tag }}
             ${{ env.ONLINE_REGISTER }}/ci-builder:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-  logical-backup:
-    if : ${{ inputs.job == 'logical-backup' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Git clone repo
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2.0.0
-      - name: logical-backup
-        uses: docker/build-push-action@v3.1.1
-        with:
-          context: ./arm64/images/logical-backup
-          file: ./arm64/images/logical-backup/Dockerfile
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          push: true
-          platforms: ${{ env.BUILD_PLATFORM }}
-          tags: |
-            ${{ env.ONLINE_REGISTER }}/logical-backup:${{ inputs.tag }}
-            ${{ env.ONLINE_REGISTER }}/logical-backup:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -323,66 +289,6 @@ jobs:
           platforms: ${{ env.BUILD_PLATFORM }}
           tags: |
             ${{ env.ONLINE_REGISTER }}/rclone-mongo:${{ inputs.tag }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  rocketmq-exporter:
-    if: ${{ inputs.job == 'rocketmq-exporter' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Git clone repo
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-#      - name: Clone RocketMQ Exporter
-#        uses: actions/checkout@v2
-#        with:
-#          repository: apache/rocketmq-exporter
-#          ref: master
-
-#      - name: Set Up Java
-#        uses: actions/setup-java@v3
-#        with:
-#          java-version: 8
-#          distribution: 'temurin'
-
-#      - name: Customize Build Files
-#        run: |
-#          sed -i 's/FROM java:8/FROM --platform=$TARGETPLATFORM openjdk:8-jre-alpine/g' src/main/docker/Dockerfile
-#
-#      - name: Build RocketMQ Exporter Image
-#        run: |
-#          mvn package -Dmaven.test.skip=true docker:build
-#
-#          docker tag rocketmq-exporter:latest ${{ env.ONLINE_REGISTER }}/rocketmq-exporter:v1.0.0
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2.0.0
-
-      - name: Build && Push
-        uses: docker/build-push-action@v3.1.1
-        with:
-          annotations: |
-            GITHUB_REF: ${{ github.ref }}
-            GITHUB_SHA: ${{ github.sha }}
-          context: ./arm64/images/
-          file: ./arm64/images/rocketmq-exporter/Dockerfile
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          push: true
-          platforms: ${{ env.BUILD_PLATFORM }}
-          tags: |
-            ${{ env.ONLINE_REGISTER }}/${{ inputs.job }}:${{ inputs.tag }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -961,42 +867,5 @@ jobs:
           tags: |
             ${{ env.ONLINE_REGISTER }}/mysql-operator:${{ inputs.tag }}
             ${{ env.ONLINE_REGISTER }}/mysql-operator:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  mysqld-exporter:
-    if: ${{ inputs.job == 'mysqld-exporter' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Git clone mysql-operator repo
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2.0.0
-      - name: mysqld-exporter
-        uses: docker/build-push-action@v3.1.1
-        with:
-          annotations: |
-            GITHUB_REF: ${{ github.ref }}
-            GITHUB_SHA: ${{ github.sha }}
-          context: ./images/mysqld-exporter
-          file: ./images/mysqld-exporter/Dockerfile
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          push: true
-          platforms: ${{ env.BUILD_PLATFORM }}
-          tags: |
-            ${{ env.ONLINE_REGISTER }}/${{ inputs.job }}:${{ inputs.tag }}
-          build-args: |
-            OS=linux
-            ARCH=${{ runner.arch == 'X64' && 'amd64' || 'arm64' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
