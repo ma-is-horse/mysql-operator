@@ -11,7 +11,6 @@ RUN apt update -y
 RUN apt upgrade -y
 
 RUN apt install -y wget gcc unzip
-ENV GOPROXY=https://goproxy.cn
 ENV GOPATH=/build
 
 WORKDIR /build
@@ -41,14 +40,6 @@ RUN cd /etc/yum.repos.d/ && sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d
 
 RUN yum update -y
 RUN yum install -y unzip wget
-
-#rclone
-#RUN export RCLONE_VERSION=1.57.0
-#RUN wget -nv https://github.com/ncw/rclone/releases/download/v1.57.0/rclone-v1.57.0-linux-${ARCH}.zip
-#RUN unzip rclone-*-linux-${ARCH}.zip
-#RUN mv rclone-*-linux-${ARCH}/rclone /usr/local/bin/
-#RUN chmod 755 /usr/local/bin/rclone
-#RUN rm -r rclone-*-linux-arm64 rclone-*-linux-${ARCH}.zip
 
 RUN curl https://rclone.org/install.sh | bash
 
