@@ -194,7 +194,7 @@ func initFileQuery(cfg *Config, gtidPurged string) []byte {
 
 	// configure metrics exporter user
 	queries = append(queries, createUserQuery(cfg.MetricsUser, cfg.MetricsPassword, "127.0.0.1",
-		[]string{"SELECT", "PROCESS", "REPLICATION CLIENT"}, "*.*",
+		[]string{"SELECT", "PROCESS", "REPLICATION CLIENT", "REPLICATION SLAVE"}, "*.*",
 		[]string{"SELECT", "CREATE"}, fmt.Sprintf("%s.%s", toolsDbName, toolsHeartbeatTableName))...)
 
 	queries = append(queries, fmt.Sprintf("ALTER USER %s@'127.0.0.1' WITH MAX_USER_CONNECTIONS 3", cfg.MetricsUser))
