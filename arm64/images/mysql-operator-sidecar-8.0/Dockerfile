@@ -2,7 +2,7 @@
 #  Docker image for sidecar containers
 ###############################################################################
 
-FROM --platform=$TARGETPLATFORM golang:1.19.2 as builder
+FROM --platform=$TARGETPLATFORM golang:1.21.13 as builder
 
 USER root
 
@@ -17,7 +17,6 @@ WORKDIR /build
 RUN wget -O extra_image.zip https://github.com/ksmartdata/mysql-operator/archive/refs/heads/extra_image.zip
 RUN unzip extra_image.zip
 WORKDIR /build/mysql-operator-extra_image
-RUN go mod tidy
 RUN CGO_ENABLED=0 go build  -o /mysql-operator-sidecar  cmd/mysql-operator-sidecar/main.go
 
 
